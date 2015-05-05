@@ -4,7 +4,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,8 +27,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Àlex on 04/05/2015.
@@ -61,7 +63,7 @@ public class ForecastFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("08025");
+            weatherTask.execute("08025,es");
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -159,14 +161,17 @@ public class ForecastFragment extends Fragment {
             // current day, we're going to take advantage of that to get a nice
             // normalized UTC date for all of our weather.
 
-            Time dayTime = new Time();
-            dayTime.setToNow();
+            // Time dayTime = new Time();
+            // dayTime.setToNow();
 
             // we start at the day returned by local time. Otherwise this is a mess.
-            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
+            // int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
 
             // now we work exclusively in UTC
-            dayTime = new Time();
+            // dayTime = new Time();
+
+            GregorianCalendar dayTime = new GregorianCalendar();
+            Calendar cal = Calendar.getInstance();
 
             String[] resultStrs = new String[numDays];
             for(int i = 0; i < weatherArray.length(); i++) {
@@ -181,12 +186,20 @@ public class ForecastFragment extends Fragment {
                 // The date/time is returned as a long.  We need to convert that
                 // into something human-readable, since most people won't read "1400356800" as
                 // "this saturday".
-                long dateTime;
+                // long dateTime;
                 // Cheating to convert this to UTC time, which is what we want anyhow
-                dateTime = dayTime.setJulianDay(julianStartDay+i);
-                day = getReadableDateString(dateTime);
+                // dateTime = dayTime.setJulianDay(julianStartDay+i);
+                // day = getReadableDateString(dateTime);
 
-                // description is in a child array called "weather", which is 1 element long.
+                day = dayTime.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
+                        //+ " " + dayTime.getDisplayName(Calendar.DAY_OF_MONTH, Calendar.LONG, Locale.getDefault())
+                        + " " + String.valueOf(cal.get(Calendar.DAY_OF_MONTH))
+                        + " " + dayTime.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+
+                // Log.v(LOG_TAG, "day: " + day);
+                dayTime.add(Calendar.DAY_OF_WEEK, 1);
+                cal.add(Calendar.DATE, 1);
+
                 JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
                 description = weatherObject.getString(OWM_DESCRIPTION);
 
@@ -194,8 +207,9 @@ public class ForecastFragment extends Fragment {
                 // "temp" when working with temperature.  It confuses everybody.
                 JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
                 double high = temperatureObject.getDouble(OWM_MAX);
+                // Log.v(LOG_TAG, "Temp Max: " + high);
                 double low = temperatureObject.getDouble(OWM_MIN);
-
+                // (LOG_TAG, "Temp Min: " + low);
                 highAndLow = formatHighLows(high, low);
                 resultStrs[i] = day + " - " + description + " - " + highAndLow;
             }
@@ -206,6 +220,7 @@ public class ForecastFragment extends Fragment {
             return resultStrs;
 
         }
+
         @Override
         protected String[] doInBackground(String... params) {
 
@@ -233,7 +248,7 @@ public class ForecastFragment extends Fragment {
                         "http://api.openweathermap.org/data/2.5/forecast/daily?";
                 final String QUERY_PARAM = "q";
                 final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "unit";
+                final String UNITS_PARAM = "units";
                 final String DAYS_PARAM = "cnt";
 
                 Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
@@ -245,7 +260,7 @@ public class ForecastFragment extends Fragment {
 
                 URL url = new URL(builtUri.toString());
 
-               // Log.v(LOG_TAG, "Built URI: " + buildUri.toString());
+                // Log.v(LOG_TAG, "Built URI: " + builtUri.toString());
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
