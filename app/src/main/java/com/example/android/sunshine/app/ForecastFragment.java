@@ -173,8 +173,8 @@ public class ForecastFragment extends Fragment {
             GregorianCalendar dayTime = new GregorianCalendar();
             Calendar cal = Calendar.getInstance();
 
-            String[] resultStrs = new String[numDays];r5
-            for(int i = 0; i < weatherArray.length(); i++) {
+            String[] resultStrs = new String[numDays];
+            for(int i = 0; i < weatherArray.length(); i += 1) {
                 // For now, using the format "Day, description, hi/low"
                 String day;
                 String description;
