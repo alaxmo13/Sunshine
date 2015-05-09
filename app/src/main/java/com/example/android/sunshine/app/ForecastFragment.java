@@ -1,8 +1,11 @@
 package com.example.android.sunshine.app;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -24,13 +28,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -62,11 +62,24 @@ public class ForecastFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("08025,es");
+            updateWeather();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateWeather() {
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = prefs.getString(getString((R.string.pref_location_key)),
+                getString(R.string.pref_location_default));
+        weatherTask.execute(location);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
     }
 
     @Override
@@ -74,33 +87,27 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
 
 
-        String [] data = {
-                "Today - Sunny - 88/63",
-                "Tomorrow - Foggy - 70/40",
-                "Weds - Cloudy - 72/63",
-                "Thurs - Asteroids - 75/65",
-                "Fri - Heavy Rain - 65/56",
-                "Sat - HELP TRAPPED IN WEATHERSTATION - 60/51",
-                "Sun - Sunny - 80/68"
-        };
-
-        List<String> weekForecast = new ArrayList<String>(Arrays.asList(data));
-
         mForecastAdapter = new ArrayAdapter<String> (
-            // The current context.
-            getActivity(),
-            // ID of list item layout
-            R.layout.list_item_forecast,
-            // ID of the textview to populate
-            R.id.list_item_forecast_textview,
-            // Forecast data
-            weekForecast);
+            getActivity(),                      // The current context.
+            R.layout.list_item_forecast,        // ID of list item layout
+            R.id.list_item_forecast_textview,   // ID of the textview to populate
+            new ArrayList<String>());
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        ListView listView = (ListView) rootView.findViewById(
-                R.id.listview_forecast);
+        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(mForecastAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                String forecast = mForecastAdapter.getItem(position);
+                Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, forecast);
+                startActivity(intent);
+                /*Toast t = Toast.makeText(getActivity(), forecast, Toast.LENGTH_LONG);
+                t.show();*/
+            }
+        });
 
         return rootView;
     }
@@ -112,19 +119,32 @@ public class ForecastFragment extends Fragment {
         /* The date/time conversion code is going to be moved outside the asynctask later,
                 * so for convenience we're breaking it out into its own method now.
                 */
-        private String getReadableDateString(long time){
+        /*private String getReadableDateString(long time){
             // Because the API returns a unix timestamp (measured in seconds),
             // it must be converted to milliseconds in order to be converted to valid date.
             Date date = new Date(time * 1000);
             SimpleDateFormat format = new SimpleDateFormat("E, MMM dd");
             return format.format(date).toString();
-        }
+        }*/
 
         /**
          * Prepare the weather high/lows for presentation.
          */
         private String formatHighLows(double high, double low) {
             // For presentation, assume the user doesn't care about tenths of a degree.
+            SharedPreferences sharedPreferences =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String unitType = sharedPreferences.getString(
+                    getString(R.string.pref_units_key),
+                    getString(R.string.pref_units_metric));
+            if (unitType.equals(getString(R.string.pref_units_imperial))) {
+                high = (high * 1.8)+32;
+                low = (low * 1.8)+32;
+            }
+            else if (!unitType.equals(getString(R.string.pref_units_metric))){
+                Log.d(LOG_TAG, "unit type not found: " + unitType);
+            }
+
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 
@@ -192,11 +212,11 @@ public class ForecastFragment extends Fragment {
                 // day = getReadableDateString(dateTime);
 
                 day = dayTime.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
-                        //+ " " + dayTime.getDisplayName(Calendar.DAY_OF_MONTH, Calendar.LONG, Locale.getDefault())
-                        + " " + String.valueOf(cal.get(Calendar.DAY_OF_MONTH))
-                        + " " + dayTime.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+                    //+ " " + dayTime.getDisplayName(Calendar.DAY_OF_MONTH, Calendar.LONG, Locale.getDefault())
+                    + " " + String.valueOf(cal.get(Calendar.DAY_OF_MONTH))
+                    + " " + dayTime.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
 
-                // Log.v(LOG_TAG, "day: " + day);
+                // Log.d(LOG_TAG, "day: " + String.valueOf(dayTime.getDisplayName(Calendar.DAY_OF_MONTH, Calendar.LONG, Locale.getDefault())));
                 dayTime.add(Calendar.DAY_OF_WEEK, 1);
                 cal.add(Calendar.DATE, 1);
 
@@ -294,8 +314,8 @@ public class ForecastFragment extends Fragment {
 
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attempting
-                // to parse it.
+                // If the code didn't successfully get the weather data, there's no point
+                // in attempting to parse it.
                 return null;
             } finally{
                 if (urlConnection != null) {
