@@ -65,7 +65,7 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
     private String getReadableDateString(long time){
         // Because the API returns a unix timestamp (measured in seconds),
         // it must be converted to milliseconds in order to be converted to valid date.
-        Date date = new Date(time);
+        Date date = new Date(time * 1000);
         SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
         return format.format(date).toString();
     }
@@ -110,6 +110,9 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
      * @return the row ID of the added location.
      */
     long addLocation(String locationSetting, String cityName, double lat, double lon) {
+
+        Log.v(LOG_TAG, "inserting " + cityName + ", with coord: " + lat + ", " + lon);
+
         // Students: First, check if the location with this city name exists in the db
         // If it exists, return the current ID
         // Otherwise, insert it using the content resolver and the base URI
@@ -125,9 +128,11 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
                 null);
 
         if (locationCursor.moveToFirst()) {
+            Log.v(LOG_TAG, "Found it in the database!");
             int locationIdIndex = locationCursor.getColumnIndex(WeatherContract.LocationEntry._ID);
             locationId = locationCursor.getLong(locationIdIndex);
         } else {
+            Log.v(LOG_TAG, "Didn't find it in the database, inserting now!");
             // Now that the content provider is set up, inserting rows of the data is pretty simple.
             // First create a ContentValues object to hold the data you want to insert.
             ContentValues locationValues = new ContentValues();
