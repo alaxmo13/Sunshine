@@ -1,11 +1,7 @@
 package com.example.android.sunshine.app;
 
-import android.app.LoaderManager;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,8 +18,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.example.android.sunshine.app.data.WeatherContract;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,15 +33,12 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
-import static android.app.LoaderManager.LoaderCallbacks;
-
 /**
  * Created by Àlex on 04/05/2015.
  */
-public class ForecastFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ForecastFragment extends Fragment {
 
-    private static final int FORECAST_LOADER = 0;
-    private ForecastAdapter mForecastAdapter;
+    private ArrayAdapter<String> mForecastAdapter;
 
     public ForecastFragment() {
     }
@@ -113,38 +104,12 @@ public class ForecastFragment extends Fragment implements LoaderCallbacks<Cursor
                 Intent intent = new Intent(getActivity(), DetailActivity.class)
                         .putExtra(Intent.EXTRA_TEXT, forecast);
                 startActivity(intent);
+                /*Toast t = Toast.makeText(getActivity(), forecast, Toast.LENGTH_LONG);
+                t.show();*/
             }
         });
 
         return rootView;
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String locationSetting = Utility.getPreferredLocation(getActivity());
-
-        // Sort order: Ascending, by date.
-        String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
-        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
-                locationSetting, System.currentTimeMillis()
-        );
-
-        return new CursorLoader(getActivity(),
-                weatherForLocationUri,
-                null,
-                null,
-                null,
-                sortOrder);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        mForecastAdapter.swapCursor(cursor);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        mForecastAdapter.swapCursor(null);
     }
 
     public class  FetchWeatherTask extends AsyncTask<String, Void, String[]> {
