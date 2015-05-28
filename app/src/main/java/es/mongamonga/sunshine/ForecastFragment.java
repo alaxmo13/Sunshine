@@ -1,8 +1,11 @@
 package es.mongamonga.sunshine;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
 import android.util.Log;
@@ -12,8 +15,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +41,7 @@ import java.util.Arrays;
 public class ForecastFragment extends Fragment {
 
     ArrayAdapter<String> adapter;
-
+    private final String LOG_TAG = ForecastFragment.class.getSimpleName();
     public ForecastFragment() {
     }
 
@@ -54,6 +59,41 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onStart(){
+        super.onStart();
+        updateWeather();
+    }
+
+    public void updateWeather()
+    {
+        FetchWeatherTask fetcher = new FetchWeatherTask();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = sp.getString(getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default));
+        String units = sp.getString(getString(R.string.pref_units_key),
+                getString(R.string.pref_units_default));
+        fetcher.execute(location, units);
+    }
+
+    public void startGPSApp() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = sp.getString(getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default));
+        Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
+                .appendQueryParameter("q", location).build();
+        intent.setData(geoLocation);
+        if (intent.resolveActivity(getActivity().getPackageManager())!=null) {
+            startActivity(intent);
+        }
+        else {
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(getActivity(), "Nobody answers to: "+geoLocation.toString(), duration);
+            toast.show();
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -62,11 +102,13 @@ public class ForecastFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
-            FetchWeatherTask fetcher = new FetchWeatherTask();
-            fetcher.execute("08390");
+            updateWeather();
             return true;
         }
-
+        if (id == R.id.action_locate) {
+            startGPSApp();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -83,7 +125,19 @@ public class ForecastFragment extends Fragment {
         ListView lw = (ListView)rootview.findViewById(R.id.listview_forecast);
         lw.setAdapter(adapter);
 
-
+        lw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                Context cnt = getActivity();
+//
+//                int duration = Toast.LENGTH_SHORT;
+//                Toast toast = Toast.makeText(cnt, adapter.getItem(position), duration);
+//                toast.show();
+                Intent i = new Intent(getActivity(), DetailActivity.class);
+                i.putExtra("Forecast", adapter.getItem(position));
+                startActivity(i);
+            }
+        });
 
         return rootview;
     }
@@ -102,7 +156,8 @@ public class ForecastFragment extends Fragment {
             // Will contain the raw JSON response as a string.
             String forecastJsonStr = null;
             String format = "json";
-            String units = "metric";
+            String units = params[1];
+            String location = params[0];
             int days = 7;
             try {
                 // Construct the URL for the OpenWeatherMap query
@@ -114,7 +169,7 @@ public class ForecastFragment extends Fragment {
                 final String UNITS_PARAM = "units";
                 final String DAYS_PARAM = "cnt";
                 Uri buildUri =  Uri.parse(BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, params[0])
+                        .appendQueryParameter(QUERY_PARAM, location)
                         .appendQueryParameter(FORMAT_PARAM, format)
                         .appendQueryParameter(UNITS_PARAM, units)
                         .appendQueryParameter(DAYS_PARAM, Integer.toString(days)).build();
