@@ -1,7 +1,5 @@
 package com.example.android.sunshine.app;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -32,18 +30,18 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupActionBar();
+        //setupActionBar();
         addPreferencesFromResource(R.xml.pref_general);
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_location_key)));
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_units_key)));
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void setupActionBar() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-           getActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-    }
+//    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+//    private void setupActionBar() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+//           getActionBar().setDisplayHomeAsUpEnabled(true);
+//        }
+//    }
 
     private void bindPreferenceSummaryToValue(Preference preference) {
         // Set the listener to watch for value changes.
