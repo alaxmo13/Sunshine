@@ -15,6 +15,8 @@ import android.widget.TextView;
 */
 public class ForecastAdapter extends CursorAdapter {
 
+    private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+
     private static final int VIEW_TYPE_TODAY = 0;
     private static final int VIEW_TYPE_FUTURE_DAY = 1;
     private static final int VIEW_TYPE_COUNT = 2;
@@ -84,8 +86,7 @@ public class ForecastAdapter extends CursorAdapter {
     */
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-
-        ViewHolder viewHolder =(ViewHolder) view.getTag();
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
 
         int viewType = getItemViewType(cursor.getPosition());
         switch (viewType) {

@@ -102,10 +102,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     public void onCreateOptionsMenu (Menu menu, MenuInflater inflater) {
-        Log.v(LOG_TAG, "in onCreateOptionsMenu");
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.detailfragment, menu);
-
+        Log.v(LOG_TAG, "in onCreateOptionsMenu");
         // Retrieve the share menu item
         MenuItem menuItem = menu.findItem(R.id.action_share);
 
