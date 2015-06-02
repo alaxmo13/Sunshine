@@ -8,7 +8,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,7 +22,7 @@ import android.widget.TextView;
 import com.example.android.sunshine.app.data.WeatherContract;
 
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,14 +100,15 @@ public class DetailActivity extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            Intent intent = getActivity().getIntent();
-            View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-            if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-                mForecast = intent.getStringExtra(Intent.EXTRA_TEXT);
-                ((TextView) rootView.findViewById(R.id.detail_text))
-                        .setText(mForecast);
-            }
-            return rootView;
+              return inflater.inflate(R.layout.fragment_detail, container, false);
+//            Intent intent = getActivity().getIntent();
+//            View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+//            if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
+//                mForecast = intent.getStringExtra(Intent.EXTRA_TEXT);
+//                ((TextView) rootView.findViewById(R.id.detail_text))
+//                        .setText(mForecast);
+//            }
+//            return rootView;
         }
 
         public void onCreateOptionsMenu (Menu menu, MenuInflater inflater) {
@@ -139,6 +140,12 @@ public class DetailActivity extends AppCompatActivity {
             shareIntent.putExtra(Intent.EXTRA_TEXT,
                     mForecast + FORECAST_SHARE_HASHTAG);
             return shareIntent;
+        }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            super.onActivityCreated(savedInstanceState);
         }
 
         @Override
