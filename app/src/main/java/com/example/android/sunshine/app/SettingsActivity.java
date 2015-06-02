@@ -1,5 +1,7 @@
 package com.example.android.sunshine.app;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -71,8 +73,7 @@ public class SettingsActivity extends PreferenceActivity
             if (index >= 0) {
                 preference.setSummary(listPreference.getEntries()[index]);
             }
-        }
-        else {
+        } else {
             // For all other preferences, set the summary to the value's
             // simple string representation.
             preference.setSummary(stringValue);
