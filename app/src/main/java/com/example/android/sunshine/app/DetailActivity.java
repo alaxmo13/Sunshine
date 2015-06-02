@@ -117,6 +117,7 @@ public class DetailActivity extends AppCompatActivity {
             // Retrieve the share menu item
             MenuItem menuItem = menu.findItem(R.id.action_share);
 
+            Log.d(LOG_TAG, "menuItem: " + menuItem);
             // Get the provider and hold onto it to set/change the share intent.
              mShareActionProvider =
                     (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
