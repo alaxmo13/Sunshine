@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package es.mongamonga.sunshine.data;
+package com.example.android.sunshine.app.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -112,7 +112,6 @@ public class TestDb extends AndroidTestCase {
         also make use of the ValidateCurrentRecord function from within TestUtilities.
     */
     public void testLocationTable() {
-        // First step: Get reference to writable database
         insertLocation();
     }
 
@@ -125,48 +124,56 @@ public class TestDb extends AndroidTestCase {
     public void testWeatherTable() {
         // First insert the location, and then use the locationRowId to insert
         // the weather. Make sure to cover as many failure cases as you can.
-        long locationRowId= insertLocation();
+
         // Instead of rewriting all of the code we've already written in testLocationTable
         // we can move this code to insertLocation and then call insertLocation from both
         // tests. Why move it? We need the code to return the ID of the inserted location
         // and our testLocationTable can only return void because it's a test.
 
+        long locationRowId = insertLocation();
+
+        // Make sure we have a valid row ID.
+        assertFalse("Error: Location Not Inserted Correctly", locationRowId == -1L);
+
         // First step: Get reference to writable database
-
-
+        // If there's an error in those massive SQL table creation Strings,
+        // errors will be thrown here when you try to get a writable database.
         WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        // Create ContentValues of what you want to insert
-        // (you can use the createWeatherValues TestUtilities function if you wish)
-        ContentValues contentValues = TestUtilities.createWeatherValues(locationRowId);
-        // Insert ContentValues into database and get a row ID back
-        db.insert(
-                WeatherContract.WeatherEntry.TABLE_NAME,
-                null,
-                contentValues
-        );
-        // Query the database and receive a Cursor back
-        Cursor c = db.query(
-                WeatherContract.WeatherEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-        // Move the cursor to a valid database row
-        assertTrue("Error: No rows returned from weather query", c.moveToFirst());
-        // Validate data in resulting Cursor with the original ContentValues
-        // (you can use the validateCurrentRecord function in TestUtilities to validate the
-        // query if you like)
-        TestUtilities.validateCurrentRecord("Error: Weather query validation fails", c, contentValues);
-        // Finally, close the cursor and database
 
-        assertFalse("Error: More than one record returned from location query", c.moveToNext());
+        // Second Step (Weather): Create weather values
+        ContentValues weatherValues = TestUtilities.createWeatherValues(locationRowId);
 
-        c.close();
-        db.close();
+        // Third Step (Weather): Insert ContentValues into database and get a row ID back
+        long weatherRowId = db.insert(WeatherContract.WeatherEntry.TABLE_NAME, null, weatherValues);
+        assertTrue(weatherRowId != -1);
+
+        // Fourth Step: Query the database and receive a Cursor back
+        // A cursor is your primary interface to the query results.
+        Cursor weatherCursor = db.query(
+                WeatherContract.WeatherEntry.TABLE_NAME,  // Table to Query
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null, // columns to group by
+                null, // columns to filter by row groups
+                null  // sort order
+        );
+
+        // Move the cursor to the first valid database row and check to see if we have any rows
+        assertTrue( "Error: No Records returned from location query", weatherCursor.moveToFirst() );
+
+        // Fifth Step: Validate the location Query
+        TestUtilities.validateCurrentRecord("testInsertReadDb weatherEntry failed to validate",
+                weatherCursor, weatherValues);
+
+        // Move the cursor to demonstrate that there is only one record in the database
+        assertFalse( "Error: More than one record returned from weather query",
+                weatherCursor.moveToNext() );
+
+        // Sixth Step: Close cursor and database
+        weatherCursor.close();
+        dbHelper.close();
     }
 
 
@@ -176,43 +183,55 @@ public class TestDb extends AndroidTestCase {
         testWeatherTable and testLocationTable.
      */
     public long insertLocation() {
+        // First step: Get reference to writable database
+        // If there's an error in those massive SQL table creation Strings,
+        // errors will be thrown here when you try to get a writable database.
         WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        // Create ContentValues of what you want to insert
+
+        // Second Step: Create ContentValues of what you want to insert
         // (you can use the createNorthPoleLocationValues if you wish)
         ContentValues testValues = TestUtilities.createNorthPoleLocationValues();
-        // Insert ContentValues into database and get a row ID back
+
+        // Third Step: Insert ContentValues into database and get a row ID back
         long locationRowId;
         locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, testValues);
 
-
+        // Verify we got a row back.
         assertTrue(locationRowId != -1);
 
-        // Query the database and receive a Cursor back
-        Cursor c = db.query(
-                WeatherContract.LocationEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+        // Data's inserted.  IN THEORY.  Now pull some out to stare at it and verify it made
+        // the round trip.
+
+        // Fourth Step: Query the database and receive a Cursor back
+        // A cursor is your primary interface to the query results.
+        Cursor cursor = db.query(
+                WeatherContract.LocationEntry.TABLE_NAME,  // Table to Query
+                null, // all columns
+                null, // Columns for the "where" clause
+                null, // Values for the "where" clause
+                null, // columns to group by
+                null, // columns to filter by row groups
+                null // sort order
         );
 
-        // Move the cursor to a valid database row
-        assertTrue("Error: No Records returned from location query", c.moveToFirst());
+        // Move the cursor to a valid database row and check to see if we got any records back
+        // from the query
+        assertTrue( "Error: No Records returned from location query", cursor.moveToFirst() );
 
-        // Validate data in resulting Cursor with the original ContentValues
+        // Fifth Step: Validate data in resulting Cursor with the original ContentValues
         // (you can use the validateCurrentRecord function in TestUtilities to validate the
         // query if you like)
         TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
-                c, testValues);
-        // Finally, close the cursor and database
-        assertFalse("Error: More than one record returned from location query", c.moveToNext());
+                cursor, testValues);
 
-        c.close();
+        // Move the cursor to demonstrate that there is only one record in the database
+        assertFalse( "Error: More than one record returned from location query",
+                cursor.moveToNext() );
+
+        // Sixth Step: Close Cursor and Database
+        cursor.close();
         db.close();
-
         return locationRowId;
     }
 }
