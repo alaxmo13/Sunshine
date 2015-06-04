@@ -24,49 +24,29 @@ public class ForecastAdapter extends CursorAdapter {
     // Flag to determine if we want to use a separate view for "toady"
     private boolean mUseTodayLayout = true;
 
+    /**
+     * Cache of the children views for a forecast list item.
+     */
+    public static class ViewHolder {
+        public final ImageView iconView;
+        public final TextView dateView;
+        public final TextView descriptionView;
+        public final TextView highTempView;
+        public final TextView lowTempView;
+
+        public ViewHolder(View view) {
+            iconView = (ImageView) view.findViewById(R.id.list_item_icon);
+            dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
+            descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+            highTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
+            lowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
+        }
+    }
+
     public ForecastAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
     }
 
-
-    /**
-    * Prepare the weather high/lows for presentation.
-    */
-    private String formatHighLows(double high, double low) {
-        boolean isMetric = Utility.isMetric(mContext);
-        String highLowStr = Utility.formatTemperature(mContext, high, isMetric) + "/"
-                + Utility.formatTemperature(mContext, low, isMetric);
-        return highLowStr;
-    }
-
-    /*
-    This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
-    string.
-    */
-    private String convertCursorRowToUXFormat(Cursor cursor) {
-        String highAndLow = formatHighLows(
-            cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP),
-            cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP)
-        );
-
-        return Utility.formatDate(cursor.getLong(ForecastFragment.COL_WEATHER_DATE)) +
-            " - " + cursor.getString(ForecastFragment.COL_WEATHER_DESC) +
-            " - " + highAndLow;
-    }
-
-    public void setUseTodayLayout(boolean useTodayLayout) {
-        mUseTodayLayout = useTodayLayout;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return (position == 0 && mUseTodayLayout) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        return VIEW_TYPE_COUNT;
-    }
 
     /*
     Remember that these views are reused as needed.
@@ -119,6 +99,9 @@ public class ForecastAdapter extends CursorAdapter {
         // Find TextView and set weather forecast on it
         viewHolder.descriptionView.setText(description);
 
+        // For accessibility, add a content description to the icon field.
+        viewHolder.iconView.setContentDescription(description);
+
         // Read user preference for metric or imperial temperature units
         boolean isMetric = Utility.isMetric(context);
 
@@ -134,21 +117,41 @@ public class ForecastAdapter extends CursorAdapter {
     }
 
     /**
-     * Cache of the children views for a forecast list item.
-     */
-    public static class ViewHolder {
-        public final ImageView iconView;
-        public final TextView dateView;
-        public final TextView descriptionView;
-        public final TextView highTempView;
-        public final TextView lowTempView;
+    * Prepare the weather high/lows for presentation.
+    */
+    /*private String formatHighLows(double high, double low) {
+        boolean isMetric = Utility.isMetric(mContext);
+        String highLowStr = Utility.formatTemperature(mContext, high, isMetric) + "/"
+                + Utility.formatTemperature(mContext, low, isMetric);
+        return highLowStr;
+    }*/
 
-        public ViewHolder(View view) {
-            iconView = (ImageView) view.findViewById(R.id.list_item_icon);
-            dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
-            descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
-            highTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
-            lowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
-        }
+    /*
+    This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
+    string.
+    */
+    /*private String convertCursorRowToUXFormat(Cursor cursor) {
+        String highAndLow = formatHighLows(
+            cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP),
+            cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP)
+        );
+
+        return Utility.formatDate(cursor.getLong(ForecastFragment.COL_WEATHER_DATE)) +
+            " - " + cursor.getString(ForecastFragment.COL_WEATHER_DESC) +
+            " - " + highAndLow;
+    }*/
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        mUseTodayLayout = useTodayLayout;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return (position == 0 && mUseTodayLayout) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return VIEW_TYPE_COUNT;
     }
 }

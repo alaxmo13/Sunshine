@@ -12,7 +12,7 @@ import android.view.MenuItem;
 public class MainActivity extends ActionBarActivity implements ForecastFragment.Callback {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
-    private final String FORECASTFRAGMENT_TAG = "FFTAG";
+    //private final String FORECASTFRAGMENT_TAG = "FFTAG";
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
 
     private String mLocation;
@@ -21,8 +21,8 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mLocation = Utility.getPreferredLocation(this);
         super.onCreate(savedInstanceState);
+        mLocation = Utility.getPreferredLocation(this);
         setContentView(R.layout.activity_main);
         if (findViewById(R.id.weather_detail_container) != null) {
                     // The detail container view will be present only in the large-screen layouts
@@ -33,7 +33,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
                     // adding or replacing the detail fragment using a fragment transaction.
                     if (savedInstanceState == null) {
                         getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.weather_detail_container, new DetailFragment())
+                                .replace(R.id.weather_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                                 .commit();
                     }
         }
